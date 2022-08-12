@@ -4,9 +4,9 @@ import java.util.List;
 
 public interface Data {
 
-    List<User> allUsers();
-
     List<Song> allSongs();
 
-    int getRating(User user, Song song);
+    List<User> allUsers();
+
+    int getRating(Song song, User user);
 }
