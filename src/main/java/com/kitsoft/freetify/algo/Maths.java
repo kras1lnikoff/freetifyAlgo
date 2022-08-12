@@ -15,11 +15,4 @@ public final class Maths {
     public static int magnitudeSq(int[] a) {
         return dotProduct(a, a);
     }
-
-    public static double mean(int[] a) {
-        int sum = 0;
-        for (int x : a) sum += x;
-        return (double) sum / a.length;
-    }
-
 }
