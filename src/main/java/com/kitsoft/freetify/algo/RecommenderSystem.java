@@ -10,7 +10,9 @@ public interface RecommenderSystem {
 
     void update();
 
-    double predictRating(Song song, User user);
+    double estimateRating(Song song, User user);
+
+    double estimateSongSimilarity(Song first, Song second);
 
     List<Song> recommendSongs(User user, int size);
 
