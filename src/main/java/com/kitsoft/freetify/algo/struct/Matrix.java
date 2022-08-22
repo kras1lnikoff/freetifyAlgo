@@ -61,8 +61,8 @@ public class Matrix {
 
     public Matrix grow(int dm, int dn) {
         Matrix matrix = new Matrix(m + dm, n + dn);
-        for (int i = 0; i < m; i++) matrix.rows[i].init(n, rows[i].map());
-        for (int j = 0; j < n; j++) matrix.columns[j].init(m, columns[j].map());
+        for (int i = 0; i < m; i++) matrix.rows[i].init(matrix.n, rows[i].map());
+        for (int j = 0; j < n; j++) matrix.columns[j].init(matrix.m, columns[j].map());
         return matrix;
     }
 

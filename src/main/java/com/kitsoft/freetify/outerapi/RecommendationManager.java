@@ -14,9 +14,8 @@ public class RecommendationManager<U, I> {
     private final Map<U, Integer> userIndices;
     private final Map<I, Integer> itemIndices;
 
-    private final Function<Matrix, AbstractRecommender> generator;
+    private final AbstractRecommender recommender;
     private Matrix data;
-    private AbstractRecommender recommender;
 
     public RecommendationManager(List<U> users, List<I> items, List<Rating<U, I>> ratings, Function<Matrix, AbstractRecommender> generator) {
         this.users = new ArrayList<>(users);
@@ -25,13 +24,9 @@ public class RecommendationManager<U, I> {
         this.itemIndices = new HashMap<>();
         updateIndexMaps();
         initData(ratings);
-        this.generator = generator;
         this.recommender = generator.apply(data);
-    }
-
-    private void initData(List<Rating<U, I>> ratings) {
-        data = new Matrix(users.size(), items.size());
-        for (Rating<U, I> rating : ratings) data.set(getUserID(rating.getUser()), getItemID(rating.getItem()), rating.getScore());
+        recommender.setData(data);
+        recommender.init();
     }
 
     private void updateIndexMaps() {
@@ -39,6 +34,11 @@ public class RecommendationManager<U, I> {
         itemIndices.clear();
         for (int index = 0; index < users.size(); index++) userIndices.put(users.get(index), index);
         for (int index = 0; index < items.size(); index++) itemIndices.put(items.get(index), index);
+    }
+
+    private void initData(List<Rating<U, I>> ratings) {
+        data = new Matrix(users.size(), items.size());
+        for (Rating<U, I> rating : ratings) data.set(getUserID(rating.getUser()), getItemID(rating.getItem()), rating.getScore());
     }
 
     private int getUserID(U user) {
@@ -54,7 +54,7 @@ public class RecommendationManager<U, I> {
     }
 
     public void initialize() {
-        recommender.initialize();
+        recommender.build();
     }
 
     public void putRating(U user, I item, double rating) {
@@ -62,7 +62,7 @@ public class RecommendationManager<U, I> {
     }
 
     public void onInteraction(U user, I item) {
-        recommender.updateOnline(getUserID(user), getItemID(item));
+        recommender.update(getUserID(user), getItemID(item));
     }
 
     public void addUser(U user) {
@@ -79,8 +79,8 @@ public class RecommendationManager<U, I> {
 
     private void updateData(Matrix newData) {
         this.data = newData;
-        recommender = generator.apply(data);
-        recommender.initialize();
+        recommender.setData(newData);
+        recommender.init();
     }
 
     public List<I> recommendItems(U user, int maxSize, boolean ignoreKnown) {

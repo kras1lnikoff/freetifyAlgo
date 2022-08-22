@@ -9,8 +9,7 @@ import static com.kitsoft.freetify.algo.Maths.*;
 
 public final class BiasedSVD extends AbstractRecommender {
 
-    private int features;
-
+    private int factors;
     private int maxIterations;
     private int maxIterationsOnline;
     private double learningRate;
@@ -28,37 +27,35 @@ public final class BiasedSVD extends AbstractRecommender {
         this(data, 75, 25, 1, 0.005, 0.01);
     }
 
-    public BiasedSVD(Matrix data, int features, int maxIterations, int maxIterationsOnline, double learningRate, double regularization) {
+    public BiasedSVD(Matrix data, int factors, int maxIterations, int maxIterationsOnline, double learningRate, double regularization) {
         super(data);
-        setFeatures(features);
-        setParameters(maxIterations, learningRate, regularization);
+        setParameters(factors, maxIterations, maxIterationsOnline, learningRate, regularization);
     }
 
-    public int getFeatures() {
-        return features;
-    }
-
-    public void setFeatures(int features) {
-        this.features = features;
-        userBias = new double[users];
-        itemBias = new double[items];
-        userFeatures = new double[users][features];
-        itemFeatures = new double[items][features];
-        random = new Random();
-        for (int f = 0; f < features; f++) {
-            for (int u = 0; u < users; u++) userFeatures[u][f] = 0.1 * random.nextGaussian();
-            for (int i = 0; i < items; i++) itemFeatures[i][f] = 0.1 * random.nextGaussian();
-        }
-    }
-
-    public void setParameters(int maxIterations, double learningRate, double regularization) {
+    public void setParameters(int features, int maxIterations, int maxIterationsOnline, double learningRate, double regularization) {
+        this.factors = features;
         this.maxIterations = maxIterations;
+        this.maxIterationsOnline = maxIterationsOnline;
         this.learningRate = learningRate;
         this.regularization = regularization;
     }
 
     @Override
-    public void initialize() {
+    public void init() {
+        globalBias = 0;
+        userBias = new double[users];
+        itemBias = new double[items];
+        userFeatures = new double[users][factors];
+        itemFeatures = new double[items][factors];
+        random = new Random();
+        for (int f = 0; f < factors; f++) {
+            for (int u = 0; u < users; u++) userFeatures[u][f] = 0.1 * random.nextGaussian();
+            for (int i = 0; i < items; i++) itemFeatures[i][f] = 0.1 * random.nextGaussian();
+        }
+    }
+
+    @Override
+    public void build() {
         int actualSize = data.actualSize();
         for (int iteration = 0; iteration < maxIterations; iteration++) {
             for (int counter = 0; counter < actualSize; counter++) {
@@ -71,7 +68,7 @@ public final class BiasedSVD extends AbstractRecommender {
     }
 
     @Override
-    public void updateOnline(int user, int item) {
+    public void update(int user, int item) {
         data.set(user, item, 1.0);
         List<Map.Entry<Integer, Double>> list = data.getRow(user).entryList();
         for (int iteration = 0; iteration < maxIterationsOnline; iteration++) {
@@ -105,7 +102,7 @@ public final class BiasedSVD extends AbstractRecommender {
         globalBias += learningRate * error;
         userBias[u] += learningRate * (error - regularization * userBias[u]);
         itemBias[i] += learningRate * (error - regularization * itemBias[i]);
-        for (int f = 0; f < features; f++) {
+        for (int f = 0; f < factors; f++) {
             double oldItemFeatures = itemFeatures[i][f], oldUserFeatures = userFeatures[u][f];
             userFeatures[u][f] += learningRate * (error * oldItemFeatures - regularization * oldUserFeatures);
             itemFeatures[i][f] += learningRate * (error * oldUserFeatures - regularization * oldItemFeatures);

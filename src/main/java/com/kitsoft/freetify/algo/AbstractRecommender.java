@@ -16,14 +16,24 @@ public abstract class AbstractRecommender {
     protected Matrix data;
 
     public AbstractRecommender(Matrix data) {
+        setData(data);
+    }
+
+    public Matrix getData() {
+        return data;
+    }
+
+    public void setData(Matrix data) {
         this.data = data;
         this.users = data.rows();
         this.items = data.columns();
     }
 
-    public abstract void initialize();
+    public abstract void init();
 
-    public abstract void updateOnline(int user, int item);
+    public abstract void build();
+
+    public abstract void update(int user, int item);
 
     public abstract double predict(int user, int item);
 
